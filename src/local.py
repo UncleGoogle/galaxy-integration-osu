@@ -2,6 +2,7 @@ import sys
 import platform
 import pathlib
 import asyncio
+from typing import Optional
 
 import psutil
 
@@ -16,6 +17,7 @@ elif sys.platform == 'darwin':
 class LocalClient():
     def __init__(self):
         self._exe: pathlib.Path = self._find_exe()
+        self._proc: Optional[psutil.Process] = None
     
     @property
     def is_installed(self) -> bool:
@@ -46,6 +48,6 @@ class LocalClient():
         pass # TODO download exe and launch
 
     async def launch(self) -> asyncio.subprocess.Process:  # pylint: disable=no-member # due to pylint/issues/1469
-        process = await asyncio.subprocess.create_subprocess_exec(self._exe)  #pylint: disable=no-member
+        process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  #pylint: disable=no-member
         self._proc = psutil.Process(process.pid)
         return process

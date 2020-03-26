@@ -3,7 +3,7 @@ import json
 import webbrowser
 import logging
 import pathlib
-from typing import List, Union
+from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
@@ -30,6 +30,10 @@ class PluginOsu(Plugin):
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
         return Authentication('osu_user', 'osu_user')
     
+    async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
+            -> Union[NextStep, Authentication]:
+        return Authentication('osu_user', 'osu_user')
+    
     async def get_owned_games(self) -> List[Game]:
         return [Game(OSU, OSU, None, LicenseInfo(LicenseType.FreeToPlay))]
     
@@ -41,15 +45,14 @@ class PluginOsu(Plugin):
             state |= LocalGameState.Running
         return [LocalGame(OSU, state)]
     
-    async def install_game(self):
+    async def install_game(self, game_id):
         webbrowser.open('https://osu.ppy.sh/home/download')
     
-    async def launch_game(self):
+    async def launch_game(self, game_id):
         process = await self._local_client.launch()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed | LocalGameState.Running))
         await process.wait()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))
-
 
 
 def main():
