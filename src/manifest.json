@@ -1,0 +1,11 @@
+{
+    "name": "Integration for Osu!",
+    "platform": "egg",
+    "guid": "79764115-b455-4ff0-be13-a316c7c53dec",
+    "version": "0.1.0",
+    "description": "Until GOG provide osu id this plugin is shown as Newegg",
+    "author": "Mesco",
+    "email": "mieszkoziemowit@gmail.com",
+    "url": "https://github.com/UncleGoogle/galaxy-integration-osu/",
+    "script": "plugin.py"
+}

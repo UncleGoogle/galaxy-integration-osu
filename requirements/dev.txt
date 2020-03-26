@@ -1,0 +1,11 @@
+-r app.txt
+fog.buildtools
+pylint
+invoke
+mypy
+pytest
+pytest-asyncio
+pytest-pythonpath
+pytest-flakes
+pytest-mock
+PyGithub
