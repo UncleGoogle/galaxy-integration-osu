@@ -1,5 +1,7 @@
 # Editor
 .vscode
+.app_credentials
+GPUCache
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
