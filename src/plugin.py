@@ -1,4 +1,5 @@
 import sys
+import re
 import json
 import webbrowser
 import logging
@@ -12,6 +13,7 @@ from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, Licens
 from galaxy.api.consts import Platform, LocalGameState
 
 from local import LocalClient
+from api import ApiClient
 
 
 OSU = 'osu!'
@@ -25,23 +27,38 @@ with open(pathlib.Path(__file__).parent / 'manifest.json') as f:
 class PluginOsu(Plugin):
     def __init__(self, reader, writer, token):
         super().__init__(Platform.Newegg, __version__, reader, writer, token)
-        self._local_client = LocalClient()
+        self._api = ApiClient()
+        self._local = LocalClient()
 
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
-        return Authentication('osu_user', 'osu_user')
-    
+        if stored_credentials is not None:
+            pass  # TODO
+
+        PARAMS = {
+            "window_title": "Login to osu!",
+            "window_width": 600,
+            "window_height": 800,
+            "start_uri": self._api.AUTHORIZE_URI,
+            "end_uri_regex": Rf'^{re.escape(self._api.REDIRECT_URI)}.*'
+        }
+        return NextStep('web_session', PARAMS)
+
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
-        return Authentication('osu_user', 'osu_user')
+        logger.debug(step)
+        logger.debug(credentials)
+        logger.debug(cookies)
+        user_id, user_name = await self._api.authorize_after_login(url=credentials)
+        return Authentication(user_id, user_name)
     
     async def get_owned_games(self) -> List[Game]:
         return [Game(OSU, OSU, None, LicenseInfo(LicenseType.FreeToPlay))]
     
     async def get_local_games(self) -> List[LocalGame]:
         state = LocalGameState.None_
-        if self._local_client.is_installed:
+        if self._local.is_installed:
             state |= LocalGameState.Installed
-        if self._local_client.is_running:
+        if self._local.is_running:
             state |= LocalGameState.Running
         return [LocalGame(OSU, state)]
     
@@ -49,7 +66,7 @@ class PluginOsu(Plugin):
         webbrowser.open('https://osu.ppy.sh/home/download')
     
     async def launch_game(self, game_id):
-        process = await self._local_client.launch()
+        process = await self._local.launch()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed | LocalGameState.Running))
         await process.wait()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))

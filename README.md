@@ -22,6 +22,16 @@ _Requires `python3.6` or higher_
 ### Auth:
 https://osu.ppy.sh/docs/index.html#authentication
 
+- if client_secret should be hidden, then I need to expose js app that will exchange code to access_token
+Then Galaxy will:
+- open login page
+- redirect to my app with `code` in url params
+- redirect to dummy END_URI with tokens and other data in url params
+- those params will be redirected to pass_login_credentials
+- the plugin should deal with access/refresh tokens on its own.
+
+Or do not care somebody will use this client_secret and exploit api limits.
+
 ### Local game:
 - install: https://osu.ppy.sh/home/download (both windows and mac)
 - launch: just open exe
