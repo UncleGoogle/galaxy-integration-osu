@@ -36,10 +36,10 @@ class PluginOsu(Plugin):
 
         PARAMS = {
             "window_title": "Login to osu!",
-            "window_width": 600,
-            "window_height": 800,
+            "window_width": 570,
+            "window_height": 700,
             "start_uri": self._api.AUTHORIZE_URI,
-            "end_uri_regex": Rf'^{re.escape(self._api.REDIRECT_URI)}.*'
+            "end_uri_regex": '^' + re.escape(self._api.REDIRECT_URI)
         }
         return NextStep('web_session', PARAMS)
 
@@ -48,7 +48,7 @@ class PluginOsu(Plugin):
         logger.debug(step)
         logger.debug(credentials)
         logger.debug(cookies)
-        user_id, user_name = await self._api.authorize_after_login(url=credentials)
+        user_id, user_name = await self._api.authorize_after_login(credentials)
         return Authentication(user_id, user_name)
     
     async def get_owned_games(self) -> List[Game]:
