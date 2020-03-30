@@ -15,14 +15,15 @@ elif sys.platform == 'darwin':
 
 
 class LocalClient():
+
     def __init__(self):
         self._exe: pathlib.Path = self._find_exe()
         self._proc: Optional[psutil.Process] = None
-    
+
     @property
     def is_installed(self) -> bool:
         return self._exe.exists()
-    
+
     @property
     def is_running(self):
         if self._proc is None:
@@ -43,9 +44,6 @@ class LocalClient():
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, UNINSTALL_KEY) as key:
             exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
             return pathlib.Path(exe)
-    
-    def install(self):
-        pass # TODO download exe and launch
 
     async def launch(self) -> asyncio.subprocess.Process:  # pylint: disable=no-member # due to pylint/issues/1469
         process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  #pylint: disable=no-member

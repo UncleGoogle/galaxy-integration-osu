@@ -21,13 +21,18 @@ class ApiClient:
         self._access_token = None
         self._refresh_token = None
         self._expires_in = None
-    
+
     async def _request(self, method, api_url, *args, **kwargs):
         base_api_url = ''
         with handle_exception():
             async with self._session.request(method, url, *args, **kwargs) as resp:
                 return resp
-    
+
+    async def get_file(self, *args, **kwargs) -> bytes:
+        return =await (
+            await self._request('GET', *args, allow_redirects=False, **kwargs)
+        ).read()
+
     async def authorize_after_login(self, back_url):
         """TODO This code should be placed in custom server where is code is changed to refresh token
         """
@@ -54,6 +59,6 @@ class ApiClient:
         self._refresh_token = resp['refersh_token']
         self._expires_in = resp['expires_in']
         return resp
-    
+
     # async def get_user_details(self):
     #     await self._request('api')
