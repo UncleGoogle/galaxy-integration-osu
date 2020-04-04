@@ -13,7 +13,7 @@ from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, Licens
 from galaxy.api.consts import Platform, LocalGameState
 
 from local import LocalClient
-from api import ApiClient
+from api import ApiClient, AutorizationServer
 
 
 OSU = 'osu!'
@@ -33,23 +33,15 @@ class PluginOsu(Plugin):
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
         if stored_credentials is not None:
             pass  # TODO
-
-        PARAMS = {
-            "window_title": "Login to osu!",
-            "window_width": 570,
-            "window_height": 700,
-            "start_uri": self._api.AUTHORIZE_URI,
-            "end_uri_regex": '^' + re.escape(self._api.REDIRECT_URI)
-        }
-        return NextStep('web_session', PARAMS)
+        return NextStep('web_session', AutorizationServer.GALAXY_ENTRY_POINT_PARAMS)
 
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
         logger.debug(step)
         logger.debug(credentials)
         logger.debug(cookies)
-        user_id, user_name = await self._api.authorize_after_login(credentials)
-        return Authentication(user_id, user_name)
+        await self._api.load_query_credentials(credentials)
+        return Authentication(self._api.user_id, self._api.user_name)
     
     async def get_owned_games(self) -> List[Game]:
         return [Game(OSU, OSU, None, LicenseInfo(LicenseType.FreeToPlay))]
