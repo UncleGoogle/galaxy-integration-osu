@@ -5,14 +5,14 @@ import pathlib
 from galaxy.http import create_client_session, handle_exception
 
 class AutorizationServer:
-    URL = 'https://gog-galaxy-osu.net'
+    URL = 'http://127.0.0.1:5000/'
     CLIENT_ID = 929
     AUTH_URL = URL + '/auth'
-    FINAL_URL = URL + '/redirect_osu'
+    FINAL_URL = URL + '/auth?token_type=Bearer'
     START_URL = 'http://osu.ppy.sh/oauth/authorize?' + urllib.parse.urlencode({
         'response_type': 'code',
         'client_id': CLIENT_ID,
-        'redirect_uri': URL,
+        'redirect_uri': AUTH_URL,
         'scope': 'identify'  # 'identify+friends.read+users.read'
     })
     GALAXY_ENTRY_POINT_PARAMS = {
@@ -20,14 +20,13 @@ class AutorizationServer:
         "window_width": 570,
         "window_height": 700,
         "start_uri": START_URL,
-        "end_uri_regex": '^' + re.escape(FINAL_URL)
+        "end_uri_regex": '^' + re.escape(FINAL_URL) + '.*'
     }
+    # http://osu.ppy.sh/oauth/authorize?response_type=code&client_id=929&redirect_uri=http://127.0.0.1:5000/auth&scope=identify
 
 
 class ApiClient:
     API_BASE_URI = 'https://osu.ppy.sh/api/v2'
-    # this works:
-    # http://osu.ppy.sh/oauth/authorize?response_type=code&client_id=929&redirect_uri=https://gog-galaxy-osu.net/redirect&scope=identify+friends.read+users.read
 
     def __init__(self):
         self._session = create_client_session()
