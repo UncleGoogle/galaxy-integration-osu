@@ -39,11 +39,8 @@ class PluginOsu(Plugin):
 
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
-        logger.debug(step)
-        logger.debug(credentials)
-        logger.debug(cookies)
-        await self._api.load_query_credentials(credentials)
-        self.store_credentials(self._api._refresh_token)
+        await self._api.load_query_credentials(credentials['end_uri'])
+        self.store_credentials(self._api.refresh_token)
         return Authentication(self._api.user_id, self._api.user_name)
 
     async def get_owned_games(self) -> List[Game]:

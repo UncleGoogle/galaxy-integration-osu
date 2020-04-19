@@ -36,6 +36,10 @@ class ApiClient:
         self.user_id = 'mock id'
         self.user_name = 'mock name'
 
+    @property
+    def refresh_token(self):
+        return self._refresh_token
+
     async def _request(self, method, url, *args, **kwargs):
         with handle_exception():
             async with self._session.request(method, url, *args, **kwargs) as resp:
@@ -47,7 +51,7 @@ class ApiClient:
         url = self.API_BASE_URI + part
         return await self._request(method, url, *args, **kwargs)
 
-    async def load_query_credentials(self, uri):
+    def load_query_credentials(self, uri):
         qs = uri.split('?', 1)[-1]
         parsed = urllib.parse.parse_qs(qs)
         self._refresh_token = parsed['refresh_token']
@@ -55,5 +59,8 @@ class ApiClient:
         self._expires_in = parsed['expires_in']
 
     async def refresh_tokens(self, refresh_token):
+        pass
+
+    async def get_user_info(self):
         pass
 
