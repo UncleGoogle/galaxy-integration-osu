@@ -16,13 +16,13 @@ elif sys.platform == 'darwin':
 
 class LocalClient():
     def __init__(self):
-        self._exe: pathlib.Path = self._find_exe()
+        self._exe: Optional[pathlib.Path] = self._find_exe()
         self._proc: Optional[psutil.Process] = None
-    
+
     @property
     def is_installed(self) -> bool:
-        return self._exe.exists()
-    
+        return self._exe and self._exe.exists()
+
     @property
     def is_running(self):
         if self._proc is None:
@@ -35,15 +35,18 @@ class LocalClient():
             return False
         return True
 
-    def _find_exe(self) -> str:
+    def _find_exe(self) -> Optional[str]:
         if not WIN:
             raise NotImplementedError('Only Windows supported for now')
 
         UNINSTALL_KEY = R'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{86ce7517-ee79-4be9-a314-128183321391}'
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, UNINSTALL_KEY) as key:
-            exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
-            return pathlib.Path(exe)
-    
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, UNINSTALL_KEY) as key:
+                exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
+                return pathlib.Path(exe)
+        except FileNotFoundError:
+            return None
+
     def install(self):
         pass # TODO download exe and launch
 
