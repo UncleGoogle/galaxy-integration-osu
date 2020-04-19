@@ -5,10 +5,10 @@ import pathlib
 from galaxy.http import create_client_session, handle_exception
 
 
-class AutorizationServer:
+class AuthorizationClient:
     URL = 'http://127.0.0.1:5000/'
     CLIENT_ID = 929
-    AUTH_URL = URL + '/auth/osu'
+    AUTH_URL = URL + 'auth/osu'
     FINAL_PATTERN = rf'^{re.escape(AUTH_URL)}\?.*token_type=Bearer.*'
     START_URL = 'http://osu.ppy.sh/oauth/authorize?' + urllib.parse.urlencode({
         'response_type': 'code',

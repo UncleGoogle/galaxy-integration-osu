@@ -13,7 +13,7 @@ from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, Licens
 from galaxy.api.consts import Platform, LocalGameState
 
 from local import LocalClient
-from api import ApiClient, AutorizationServer
+from api import ApiClient, AuthorizationClient
 
 
 OSU = 'osu!'
@@ -34,7 +34,8 @@ class PluginOsu(Plugin):
         if stored_credentials is not None:
             self._api.refresh_tokens(stored_credentials['refresh_token'])
             return Authentication(self._api.user_id, self._api.user_name)
-        return NextStep('web_session', AutorizationServer.GALAXY_ENTRY_POINT_PARAMS)
+        logger.error(AuthorizationClient.GALAXY_ENTRY_POINT_PARAMS)
+        return NextStep('web_session', AuthorizationClient.GALAXY_ENTRY_POINT_PARAMS)
 
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
