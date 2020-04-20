@@ -3,6 +3,7 @@ import re
 import pathlib
 
 from galaxy.http import create_client_session, handle_exception
+from galaxy.api.errors import AccessDenied
 
 
 class AuthorizationClient:
@@ -48,8 +49,13 @@ class ApiClient:
     async def _api_request(self, method, part, *args, **kwargs):
         if self._access_token is None:
             raise RuntimeError('Client not authenticated!')
+
         url = self.API_BASE_URI + part
-        return await self._request(method, url, *args, **kwargs)
+        try:
+            return await self._request(method, url, *args, **kwargs)
+        except AccessDenied:
+            self.auth_with_refresh_token(self._refresh_token)
+            return await self._request(method, url, *args, **kwargs)
 
     def load_query_credentials(self, uri):
         qs = uri.split('?', 1)[-1]
@@ -58,7 +64,7 @@ class ApiClient:
         self._access_token = parsed['access_token']
         self._expires_in = parsed['expires_in']
 
-    async def refresh_tokens(self, refresh_token):
+    async def auth_with_refresh_token(self, refresh_token):
         pass
 
     async def get_user_info(self):
