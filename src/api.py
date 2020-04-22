@@ -1,8 +1,9 @@
 import urllib
 import pathlib
+import typing as t
 
 from galaxy.http import create_client_session, handle_exception
-from galaxy.api.errors import AccessDenied
+from galaxy.api.errors import AccessDenied, BackendError
 
 
 class OAuthClient:
@@ -28,37 +29,30 @@ class ApiClient:
         self.user_id = 'mock id'
         self.user_name = 'mock name'
 
-    @property
-    def refresh_token(self):
-        return self._refresh_token
-
     async def _request(self, method, url, *args, **kwargs):
         with handle_exception():
             async with self._session.request(method, url, *args, **kwargs) as resp:
                 return resp
 
     async def _api_request(self, method, part, *args, **kwargs):
-        if self._access_token is None:
-            raise RuntimeError('Client not authenticated!')
-
+        assert self._access_token is not None
         url = self.API_BASE_URI + part
-        try:
-            return await self._request(method, url, *args, **kwargs)
-        except AccessDenied:
-            self.authorize(self._refresh_token)
-            return await self._request(method, url, *args, **kwargs)
-
-    def load_query_credentials(self, uri):
-        qs = uri.split('?', 1)[-1]
-        parsed = urllib.parse.parse_qs(qs)
-        self._refresh_token = parsed['refresh_token']
-        self._access_token = parsed['access_token']
-        self._expires_in = parsed['expires_in']
-
-    async def authorize(self, refresh_token):
-        params = {
-            ''
+        headers = {
+            "Authorization": "Bearer " + self._access_token
         }
+        try:
+            return await self._request(method, url, *args, headers=headers, **kwargs)
+        except AccessDenied:
+            await self.refresh_access_token(self._refresh_token)
+            return await self._request(method, url, *args, headers=headers, **kwargs)
+
+    def set_credentials(self, credentials: t.Dict[str, str]):
+        self._refresh_token = credentials['refresh_token']
+        self._access_token = credentials['access_token']
+        self._expires_in = credentials['expires_in']
+
+    async def refresh_access_token(self, refresh_token):
+        raise BackendError(f'Refreshing token currently not supported by {self.API_BASE_URI}')
 
     async def get_user_info(self):
         pass

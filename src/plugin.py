@@ -4,6 +4,7 @@ import json
 import webbrowser
 import logging
 import pathlib
+import urllib
 from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
@@ -32,7 +33,7 @@ class PluginOsu(Plugin):
 
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
         if stored_credentials is not None:
-            self._api.refresh_tokens(stored_credentials['refresh_token'])
+            self._api.load_credentials(stored_credentials)
             return Authentication(self._api.user_id, self._api.user_name)
 
         return NextStep('web_session', {
@@ -45,8 +46,10 @@ class PluginOsu(Plugin):
 
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
-        self._api.load_query_credentials(credentials['end_uri'])
-        self.store_credentials({'refresh_token': self._api.refresh_token})
+        qs = credentials['end_uri'].split('?', 1)[-1]
+        tokens = urllib.parse.parse_qs(qs)
+        self._api.set_credentials(tokens)
+        self.store_credentials(tokens)
         return Authentication(self._api.user_id, self._api.user_name)
 
     async def get_owned_games(self) -> List[Game]:
