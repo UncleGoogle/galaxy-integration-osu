@@ -1,4 +1,6 @@
 import urllib
+import json
+import base64
 import pathlib
 import typing as t
 
@@ -35,7 +37,7 @@ class ApiClient:
                 return resp
 
     async def _api_request(self, method, part, *args, **kwargs):
-        assert self._access_token is not None
+        assert self._access_token
         url = self.API_BASE_URI + part
         headers = {
             "Authorization": "Bearer " + self._access_token
@@ -50,10 +52,23 @@ class ApiClient:
         self._refresh_token = credentials['refresh_token']
         self._access_token = credentials['access_token']
         self._expires_in = credentials['expires_in']
+        self._user_id = self._decode_user_id(self._access_token)
+
+    @staticmethod
+    def _decode_user_id(token):
+        data = token.split('.')[1]
+        decoded = base64.b64decode(token).decode('utf-8')
+        loaded = json.load(decoded)
+        return loaded['sub']
 
     async def refresh_access_token(self, refresh_token):
         raise BackendError(f'Refreshing token currently not supported by {self.API_BASE_URI}')
 
-    async def get_user_info(self):
-        pass
+    async def _get_user_name(self, user_id):
+        #TODO
+        res = await self._api_request('GET', '/me')  # + {mode}
+        res = await self._api_request('GET', '/users/{user}/recent_activity')
+
+    async def get_user_info(self) -> t.Tuple[str, str]:
+        return self._user_id, await self._get_user_name(user_id)
 
