@@ -1,30 +1,21 @@
 import urllib
-import re
 import pathlib
 
 from galaxy.http import create_client_session, handle_exception
 from galaxy.api.errors import AccessDenied
 
 
-class AuthorizationClient:
+class OAuthClient:
     URL = 'http://127.0.0.1:5000/'
     CLIENT_ID = 929
-    AUTH_URL = URL + 'auth/osu'
-    FINAL_PATTERN = rf'^{re.escape(AUTH_URL)}\?.*token_type=Bearer.*'
     START_URL = 'http://osu.ppy.sh/oauth/authorize?' + urllib.parse.urlencode({
         'response_type': 'code',
         'client_id': CLIENT_ID,
-        'redirect_uri': AUTH_URL,
+        'redirect_uri': URL + 'auth/osu',
         'scope': 'identify'  # 'identify+friends.read+users.read'
     })
-    GALAXY_ENTRY_POINT_PARAMS = {
-        "window_title": "Login to osu!",
-        "window_width": 570,
-        "window_height": 700,
-        "start_uri": START_URL,
-        "end_uri_regex": FINAL_PATTERN
-    }
     # http://osu.ppy.sh/oauth/authorize?response_type=code&client_id=929&redirect_uri=http://127.0.0.1:5000/auth/osu&scope=identify
+    END_URL = URL + 'auth/osu/redirect'
 
 
 class ApiClient:
@@ -54,7 +45,7 @@ class ApiClient:
         try:
             return await self._request(method, url, *args, **kwargs)
         except AccessDenied:
-            self.auth_with_refresh_token(self._refresh_token)
+            self.authorize(self._refresh_token)
             return await self._request(method, url, *args, **kwargs)
 
     def load_query_credentials(self, uri):
@@ -64,8 +55,10 @@ class ApiClient:
         self._access_token = parsed['access_token']
         self._expires_in = parsed['expires_in']
 
-    async def auth_with_refresh_token(self, refresh_token):
-        pass
+    async def authorize(self, refresh_token):
+        params = {
+            ''
+        }
 
     async def get_user_info(self):
         pass
