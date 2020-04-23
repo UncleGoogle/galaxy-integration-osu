@@ -9,7 +9,7 @@ from galaxy.api.errors import AccessDenied, BackendError
 
 
 class OAuthClient:
-    URL = 'http://127.0.0.1:5000/'
+    URL = 'https://unclegoogle.pythonanywhere.com/'
     CLIENT_ID = 929
     START_URL = 'http://osu.ppy.sh/oauth/authorize?' + urllib.parse.urlencode({
         'response_type': 'code',
