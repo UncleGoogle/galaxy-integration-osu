@@ -56,7 +56,6 @@ class ApiClient:
             return await self._request(method, url, *args, headers=headers, **kwargs)
 
     def set_credentials(self, credentials: t.Dict[str, str]):
-        logger.debug(credentials)
         self._refresh_token = credentials['refresh_token']
         self._access_token = credentials['access_token']
         self._expires_in = credentials['expires_in']
@@ -64,7 +63,6 @@ class ApiClient:
 
     @staticmethod
     def _user_id_from_jwt(token: str):
-        logger.debug(token)
         data = token.split('.')[1]
         decoded = base64.b64decode(data + '==').decode('utf-8')
         loaded = json.loads(decoded)
