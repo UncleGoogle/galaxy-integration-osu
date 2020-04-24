@@ -4,13 +4,14 @@ import json
 import webbrowser
 import logging
 import pathlib
+from datetime import datetime
 from urllib import parse
 from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
 from galaxy.api.plugin import Plugin, create_and_run_plugin
-from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame
+from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement
 from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
 
 from local import LocalClient
@@ -67,6 +68,7 @@ class PluginOsu(Plugin):
         return [LocalGame(OSU, state)]
 
     async def install_game(self, game_id):
+        await self._api._refresh_access_token()
         webbrowser.open('https://osu.ppy.sh/home/download')
 
     async def launch_game(self, game_id):
@@ -74,6 +76,16 @@ class PluginOsu(Plugin):
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed | LocalGameState.Running))
         await process.wait()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))
+
+    async def get_unlocked_achievements(self, game_id, context):
+        me = await self._api.get_me()
+        return [
+            Achievement(
+                achievement_id=medal['achievement_id'],
+                unlock_time=int(datetime.fromisoformat(medal['achieved_at']).timestamp())
+            )
+            for medal in me.get('user_achievements', [])
+        ]
 
 
 def main():
