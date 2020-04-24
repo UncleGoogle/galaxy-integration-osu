@@ -21,7 +21,6 @@ class OAuthClient:
         'redirect_uri': URL + 'auth/osu',
         'scope': 'identify'  # 'identify+friends.read+users.read'
     })
-    # http://osu.ppy.sh/oauth/authorize?response_type=code&client_id=929&redirect_uri=http://127.0.0.1:5000/auth/osu&scope=identify
     END_URL = URL + 'auth/osu/redirect'
 
 
