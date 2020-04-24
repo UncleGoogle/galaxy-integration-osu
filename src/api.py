@@ -1,3 +1,4 @@
+import logging
 import urllib
 import json
 import base64
@@ -6,6 +7,9 @@ import typing as t
 
 from galaxy.http import create_client_session, handle_exception
 from galaxy.api.errors import AccessDenied, BackendError
+
+
+logger = logging.getLogger(__name__)
 
 
 class OAuthClient:
@@ -28,8 +32,11 @@ class ApiClient:
         self._session = create_client_session()
         self._access_token = None
         self._refresh_token = None
-        self.user_id = 'mock id'
-        self.user_name = 'mock name'
+        self._user_id = None
+
+    @property
+    def user_id(self):
+        return self._user_id
 
     async def _request(self, method, url, *args, **kwargs):
         with handle_exception():
@@ -49,26 +56,31 @@ class ApiClient:
             return await self._request(method, url, *args, headers=headers, **kwargs)
 
     def set_credentials(self, credentials: t.Dict[str, str]):
+        logger.debug(credentials)
         self._refresh_token = credentials['refresh_token']
         self._access_token = credentials['access_token']
         self._expires_in = credentials['expires_in']
-        self._user_id = self._decode_user_id(self._access_token)
+        self._user_id = self._user_id_from_jwt(self._access_token)
 
     @staticmethod
-    def _decode_user_id(token):
+    def _user_id_from_jwt(token: str):
+        logger.debug(token)
         data = token.split('.')[1]
-        decoded = base64.b64decode(token).decode('utf-8')
-        loaded = json.load(decoded)
+        decoded = base64.b64decode(data + '==').decode('utf-8')
+        loaded = json.loads(decoded)
         return loaded['sub']
 
     async def refresh_access_token(self, refresh_token):
-        raise BackendError(f'Refreshing token currently not supported by {self.API_BASE_URI}')
+        params = {
+            'grant_type': 'refresh_token',
+            'refresh_token': self._refresh_token
+        }
+        response = await self._request('POST', json=params)
+        data = await response.json()
+        self.set_credentials(data)
 
-    async def _get_user_name(self, user_id):
+    async def get_user_name(self):
         #TODO
-        res = await self._api_request('GET', '/me')  # + {mode}
-        res = await self._api_request('GET', '/users/{user}/recent_activity')
-
-    async def get_user_info(self) -> t.Tuple[str, str]:
-        return self._user_id, await self._get_user_name(user_id)
-
+        # res = await self._api_request('GET', '/me')  # + {mode}
+        # res = await self._api_request('GET', '/users/{user}/recent_activity')
+        return 'Osu user'
