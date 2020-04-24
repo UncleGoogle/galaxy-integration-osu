@@ -4,7 +4,7 @@ import json
 import webbrowser
 import logging
 import pathlib
-import urllib
+from urllib import parse
 from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
@@ -33,8 +33,8 @@ class PluginOsu(Plugin):
 
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
         if stored_credentials is not None:
-            self._api.load_credentials(stored_credentials)
-            return Authentication(self._api.user_id, self._api.user_name)
+            self._api.set_credentials(stored_credentials)
+            return Authentication(self._api.user_id, await self._api.get_user_name())
 
         return NextStep('web_session', {
             "window_title": "Login to osu!",
@@ -46,11 +46,11 @@ class PluginOsu(Plugin):
 
     async def pass_login_credentials(self, step: str, credentials: Dict[str, str], cookies: List[Dict[str, str]]) \
             -> Union[NextStep, Authentication]:
-        qs = credentials['end_uri'].split('?', 1)[-1]
-        tokens = urllib.parse.parse_qs(qs)
+        query_string = parse.urlsplit(credentials['end_uri']).query
+        tokens = dict(parse.parse_qsl(query_string))
         self._api.set_credentials(tokens)
         self.store_credentials(tokens)
-        return Authentication(self._api.user_id, self._api.user_name)
+        return Authentication(self._api.user_id, await self._api.get_user_name())
 
     async def get_owned_games(self) -> List[Game]:
         return [Game(OSU, OSU, None, LicenseInfo(LicenseType.FreeToPlay))]
