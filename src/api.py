@@ -59,7 +59,7 @@ class ApiClient:
             async with self._session.request(method, url, *args, **kwargs) as resp:
                 return resp
 
-    async def _refresh_access_token(self, refresh_token):
+    async def _refresh_access_token(self):
         params = {
             'grant_type': 'refresh_token',
             'refresh_token': self._refresh_token
@@ -78,7 +78,7 @@ class ApiClient:
             return await self._request(method, url, *args, headers=headers, **kwargs)
         except (AuthenticationRequired, AccessDenied):
             try:
-                await self._refresh_access_token(self._refresh_token)
+                await self._refresh_access_token()
             except Exception as e:
                 logger.error('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
