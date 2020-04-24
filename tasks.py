@@ -111,7 +111,7 @@ def dist(c, output=DIST_PLUGIN, galaxy_path=GALAXY_PATH, no_deps=False):
 
 @task
 def debug(c, output=DIST_PLUGIN, deps=False):
-    this_plugin = 'plugin-osu'
+    this_plugin = 'plugin-egg'
     for proc in psutil.process_iter(attrs=['exe'], ad_value=''):
         if proc.info['exe'] == GALAXY_PYTHONPATH:
             if this_plugin in proc.cmdline()[-1]:
