@@ -35,7 +35,7 @@ class PluginOsu(Plugin):
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
         if stored_credentials is not None:
             self._api.set_credentials(stored_credentials)
-            return Authentication(self._api.user_id, await self._api.get_user_name())
+            return Authentication(self._api.user_id, await self._api.get_me()['username'])
 
         return NextStep('web_session', {
             "window_title": "Login to osu!",
@@ -51,7 +51,7 @@ class PluginOsu(Plugin):
         tokens = dict(parse.parse_qsl(query_string))
         self._api.set_credentials(tokens)
         self.store_credentials(tokens)
-        return Authentication(self._api.user_id, await self._api.get_user_name())
+        return Authentication(self._api.user_id, await self._api.get_me()['username'])
 
     async def get_owned_games(self) -> List[Game]:
         return [Game(OSU, OSU, None, LicenseInfo(LicenseType.OtherUserLicense))]
