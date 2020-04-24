@@ -11,7 +11,7 @@ sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
 from galaxy.api.plugin import Plugin, create_and_run_plugin
 from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame
-from galaxy.api.consts import Platform, LocalGameState
+from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
 
 from local import LocalClient
 from api import ApiClient, OAuthClient
@@ -28,7 +28,7 @@ with open(pathlib.Path(__file__).parent / 'manifest.json') as f:
 class PluginOsu(Plugin):
     def __init__(self, reader, writer, token):
         super().__init__(Platform.Newegg, __version__, reader, writer, token)
-        self._api = ApiClient()
+        self._api = ApiClient(self.store_credentials, self.lost_authentication)
         self._local = LocalClient()
 
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
@@ -53,7 +53,10 @@ class PluginOsu(Plugin):
         return Authentication(self._api.user_id, await self._api.get_user_name())
 
     async def get_owned_games(self) -> List[Game]:
-        return [Game(OSU, OSU, None, LicenseInfo(LicenseType.FreeToPlay))]
+        return [Game(OSU, OSU, None, LicenseInfo(LicenseType.OtherUserLicense))]
+
+    async def get_os_compatibility(self, game_id, context):
+        return OSCompatibility.Windows | OSCompatibility.MacOS
 
     async def get_local_games(self) -> List[LocalGame]:
         state = LocalGameState.None_
