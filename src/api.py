@@ -56,15 +56,15 @@ class ApiClient:
     async def _request(self, method, url, *args, **kwargs):
         with handle_exception():
             async with self._session.request(method, url, *args, **kwargs) as resp:
-                return resp
+                return await resp.json()
 
     async def _refresh_access_token(self):
         params = {
             'grant_type': 'refresh_token',
             'refresh_token': self._refresh_token
         }
-        response = await self._request('POST', json=params)
-        data = await response.json()
+        url = 'https://osu.ppy.sh/oauth/token'
+        data = await self._request('POST', url, json=params)
         self.set_credentials(data)
 
     async def _api_request(self, method, part, *args, **kwargs):
@@ -88,8 +88,5 @@ class ApiClient:
                     logger.error('Cannot access %s: %s', url, repr(e))
                     self._auth_lost()
 
-    async def get_user_name(self):
-        #TODO
-        # res = await self._api_request('GET', '/me')  # + {mode}
-        # res = await self._api_request('GET', '/users/{user}/recent_activity')
-        return 'Osu user'
+    async def get_me(self):
+        return await self._api_request('GET', '/me')
