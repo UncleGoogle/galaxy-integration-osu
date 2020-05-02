@@ -78,7 +78,7 @@ class ApiClient:
         except (AuthenticationRequired, AccessDenied):
             try:
                 await self._refresh_access_token()
-            except (AuthenticationRequired, AccessDenied) as e:
+            except Exception as e:
                 logger.error('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
             else:
