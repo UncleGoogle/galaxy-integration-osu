@@ -24,11 +24,24 @@ class OAuthClient:
     END_URL = URL + 'auth/osu/redirect'
 
 
-class ApiClient:
+class HttpClient:
+    def __init__(self):
+        self._session = create_client_session()
+    
+    async def request(self, method, url, *args, **kwargs):
+        with handle_exception():
+            return await self._session.request(method, url, *args, **kwargs)
+    
+    async def get_file(self, url, *args, **kwargs):
+        resp = await self.request('GET', url, *args)
+        return await resp.read()
+
+
+class ApiClient(HttpClient):
     API_BASE_URI = 'https://osu.ppy.sh/api/v2'
 
     def __init__(self, store_credentials: t.Callable, auth_lost: t.Callable):
-        self._session = create_client_session()
+        super().__init__()
         self._access_token = None
         self._refresh_token = None
         self._user_id = None
@@ -52,19 +65,18 @@ class ApiClient:
         self._expires_in = credentials['expires_in']
         self._user_id = self._user_id_from_jwt(self._access_token)
         self._store_credentials(credentials)
-
-    async def _request(self, method, url, *args, **kwargs):
-        with handle_exception():
-            async with self._session.request(method, url, *args, **kwargs) as resp:
-                return await resp.json()
-
+    
+    async def _json_request(self, method, url, *args, **kwargs):
+        resp = await self.request(method, url, *args, **kwargs)
+        return await resp.json()
+    
     async def _refresh_access_token(self):
         params = {
             'grant_type': 'refresh_token',
             'refresh_token': self._refresh_token
         }
         url = 'https://osu.ppy.sh/oauth/token'
-        data = await self._request('POST', url, json=params)
+        data = await self._json_request('POST', url, json=params)
         self.set_credentials(data)
 
     async def _api_request(self, method, part, *args, **kwargs):
@@ -74,7 +86,7 @@ class ApiClient:
             "Authorization": "Bearer " + self._access_token
         }
         try:
-            return await self._request(method, url, *args, headers=headers, **kwargs)
+            return await self._json_request(method, url, *args, headers=headers, **kwargs)
         except (AuthenticationRequired, AccessDenied):
             try:
                 await self._refresh_access_token()
@@ -82,7 +94,7 @@ class ApiClient:
                 logger.error('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
             else:
-                return await self._request(method, url, *args, headers=headers, **kwargs)
+                return await self._json_request(method, url, *args, headers=headers, **kwargs)
 
     async def get_me(self):
         return await self._api_request('GET', '/me')
