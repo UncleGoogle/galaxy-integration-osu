@@ -78,15 +78,11 @@ class ApiClient:
         except (AuthenticationRequired, AccessDenied):
             try:
                 await self._refresh_access_token()
-            except Exception as e:
+            except (AuthenticationRequired, AccessDenied) as e:
                 logger.error('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
             else:
-                try:
-                    return await self._request(method, url, *args, headers=headers, **kwargs)
-                except (AuthenticationRequired, AccessDenied) as e:
-                    logger.error('Cannot access %s: %s', url, repr(e))
-                    self._auth_lost()
+                return await self._request(method, url, *args, headers=headers, **kwargs)
 
     async def get_me(self):
         return await self._api_request('GET', '/me')
