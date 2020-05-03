@@ -22,6 +22,7 @@ class OAuthClient:
         'scope': 'identify'  # 'identify+friends.read+users.read'
     })
     END_URL = URL + 'auth/osu/redirect'
+    TOKEN_REFRESH = URL + 'auth/osu/refresh'
 
 
 class ApiClient:
@@ -59,12 +60,12 @@ class ApiClient:
                 return await resp.json()
 
     async def _refresh_access_token(self):
+        url = OAuthClient.TOKEN_REFRESH
         params = {
-            'grant_type': 'refresh_token',
             'refresh_token': self._refresh_token
         }
-        url = 'https://osu.ppy.sh/oauth/token'
         data = await self._request('POST', url, json=params)
+        logger.info('refresh! %s', data)
         self.set_credentials(data)
 
     async def _api_request(self, method, part, *args, **kwargs):
@@ -79,7 +80,7 @@ class ApiClient:
             try:
                 await self._refresh_access_token()
             except (AuthenticationRequired, AccessDenied) as e:
-                logger.error('Cannot refresh access token: %s', repr(e))
+                logger.exception('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
             else:
                 return await self._request(method, url, *args, headers=headers, **kwargs)
