@@ -2,7 +2,6 @@ import logging
 import urllib
 import json
 import base64
-import pathlib
 import typing as t
 
 from galaxy.http import create_client_session, handle_exception

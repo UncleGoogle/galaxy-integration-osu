@@ -2,7 +2,6 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 
-from api import ApiClient
 from plugin import PluginOsu
 
 

@@ -4,7 +4,6 @@ import json
 import webbrowser
 import logging
 import pathlib
-import asyncio
 import tempfile
 from datetime import datetime
 from urllib import parse
@@ -17,7 +16,7 @@ from galaxy.api.plugin import Plugin, create_and_run_plugin
 from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement
 from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
 
-from local import LocalClient, WIN
+from local import LocalClient
 from api import ApiClient, OAuthClient
 
 
@@ -42,9 +41,9 @@ class PluginOsu(Plugin):
 
     async def get_os_compatibility(self, game_id, context):
         return OSCompatibility.Windows  # | OSCompatibility.MacOS  # support for windows for now
-    
+
     # authentication
-    
+
     async def _auth(self, tokens: dict):
         self._api.set_credentials(tokens)
         return Authentication(self._api.user_id, (await self._api.get_me())['username'])
@@ -108,7 +107,7 @@ class PluginOsu(Plugin):
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed | LocalGameState.Running))
         await process.wait()
         self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))
-    
+
 
 def main():
     create_and_run_plugin(PluginOsu, sys.argv)
