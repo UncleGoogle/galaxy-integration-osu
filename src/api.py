@@ -22,16 +22,17 @@ class OAuthClient:
         'scope': 'identify'  # 'identify+friends.read+users.read'
     })
     END_URL = URL + 'auth/osu/redirect'
+    TOKEN_REFRESH = URL + 'auth/osu/refresh'
 
 
 class HttpClient:
     def __init__(self):
         self._session = create_client_session()
-    
+
     async def request(self, method, url, *args, **kwargs):
         with handle_exception():
             return await self._session.request(method, url, *args, **kwargs)
-    
+
     async def get_file(self, url, *args, **kwargs):
         resp = await self.request('GET', url, *args)
         return await resp.read()
@@ -65,18 +66,19 @@ class ApiClient(HttpClient):
         self._expires_in = credentials['expires_in']
         self._user_id = self._user_id_from_jwt(self._access_token)
         self._store_credentials(credentials)
-    
+
     async def _json_request(self, method, url, *args, **kwargs):
         resp = await self.request(method, url, *args, **kwargs)
         return await resp.json()
-    
+
     async def _refresh_access_token(self):
+        logger.info('Refreshing access token...')
+        url = OAuthClient.TOKEN_REFRESH
         params = {
-            'grant_type': 'refresh_token',
             'refresh_token': self._refresh_token
         }
-        url = 'https://osu.ppy.sh/oauth/token'
         data = await self._json_request('POST', url, json=params)
+        logger.info
         self.set_credentials(data)
 
     async def _api_request(self, method, part, *args, **kwargs):
@@ -91,7 +93,7 @@ class ApiClient(HttpClient):
             try:
                 await self._refresh_access_token()
             except Exception as e:
-                logger.error('Cannot refresh access token: %s', repr(e))
+                logger.exception('Cannot refresh access token: %s', repr(e))
                 self._auth_lost()
             else:
                 return await self._json_request(method, url, *args, headers=headers, **kwargs)
