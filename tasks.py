@@ -91,26 +91,7 @@ def build(c, output=DIST_PLUGIN):
 
 
 @task
-def dist(c, output=DIST_PLUGIN, galaxy_path=GALAXY_PATH, no_deps=False):
-    for proc in psutil.process_iter(attrs=['exe'], ad_value=''):
-        if proc.info['exe'] == galaxy_path:
-            print(f'Galaxy at {galaxy_path} is running!. Terminating...')
-            proc.terminate()
-            break
-    else:
-        print('Galaxy instance not found.')
-
-    if no_deps:
-        c.run(f'inv copy -o {output}')
-    else:
-        c.run(f'inv build -o {output}')
-
-    print(f'Reopening Galaxy from {galaxy_path}')
-    subprocess.Popen([galaxy_path])
-
-
-@task
-def debug(c, output=DIST_PLUGIN, deps=False):
+def dist(c, output=DIST_PLUGIN, deps=False):
     this_plugin = 'plugin-egg'
     for proc in psutil.process_iter(attrs=['exe'], ad_value=''):
         if proc.info['exe'] == GALAXY_PYTHONPATH:
@@ -119,9 +100,9 @@ def debug(c, output=DIST_PLUGIN, deps=False):
                 proc.terminate()
                 break
     if not deps:
-        c.run(f'inv copy -o {output}')
+        copy(c, output)
     else:
-        c.run(f'inv build -o {output}')
+        build(c, output)
     print("Now, click 'retry' for crashed plugin in Settings")
 
 
