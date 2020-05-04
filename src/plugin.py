@@ -80,8 +80,8 @@ class PluginOsu(Plugin):
 
     async def get_game_time(self, game_id, context):
         me = await self._api.get_me()
-        seconds_played = me['statistics']['playtime']
-        return GameTime(OSU, play_time=seconds_played // 60, last_played=None)
+        seconds_played = me['statistics']['play_time']
+        return GameTime(OSU, seconds_played // 60, last_played_time=None)
 
     async def get_friends(self):
         return [
