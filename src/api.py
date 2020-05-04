@@ -19,7 +19,7 @@ class OAuthClient:
         'response_type': 'code',
         'client_id': CLIENT_ID,
         'redirect_uri': URL + 'auth/osu',
-        'scope': 'identify'  # 'identify+friends.read+users.read'
+        'scope': 'identify friends.read' # users.read
     })
     END_URL = URL + 'auth/osu/redirect'
     TOKEN_REFRESH = URL + 'auth/osu/refresh'
