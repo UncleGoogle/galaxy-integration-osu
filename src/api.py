@@ -99,3 +99,6 @@ class ApiClient(HttpClient):
 
     async def get_me(self):
         return await self._api_request('GET', '/me')
+
+    async def get_friends(self):
+        return await self._api_request('GET', '/friends')
