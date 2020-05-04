@@ -13,8 +13,8 @@ sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
 import aiofiles
 from galaxy.api.plugin import Plugin, create_and_run_plugin
-from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement, UserInfo
-from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
+from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement, UserInfo, UserPresence
+from galaxy.api.consts import Platform, LocalGameState, OSCompatibility, PresenceState
 
 from local import LocalClient
 from api import ApiClient, OAuthClient
@@ -86,6 +86,16 @@ class PluginOsu(Plugin):
             if not f['is_bot']
         ]
 
+    async def prepare_user_presence_context(self, user_id_list):
+        return {
+            str(f['id']): PresenceState.Online
+            for f in await self._api.get_friends()
+            if f['is_online']
+        }
+
+    async def get_user_presence(self, user_id, context):
+        state = context.get(user_id, PresenceState.Offline)
+        return UserPresence(state)
 
     # local game management
 
