@@ -79,7 +79,6 @@ class PluginOsu(Plugin):
         ]
 
     async def get_friends(self):
-        # presence: f['is_online']
         return [
             UserInfo(str(f['id']), f['username'], f.get('avatar_url'), 'https://osu.ppy.sh/users/' + str(f['id']))
             for f in await self._api.get_friends()
