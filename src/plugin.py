@@ -13,7 +13,7 @@ sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
 import aiofiles
 from galaxy.api.plugin import Plugin, create_and_run_plugin
-from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement
+from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement, GameTime
 from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
 
 from local import LocalClient
@@ -77,6 +77,10 @@ class PluginOsu(Plugin):
             )
             for medal in me.get('user_achievements', [])
         ]
+
+    async def get_game_time(self, game_id, context):
+        me = await self._api.get_me()
+        return GameTime(OSU, play_time=me['statistics']['playtime'], last_played=None)
 
     # local game management
 
