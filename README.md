@@ -1,4 +1,7 @@
-# GOG Galaxy 2.0 integartion for Osu!
+# GOG Galaxy 2.0 integration for osu!
+
+_Currently shown as "Newegg" as there is no osu id in Galaxy API_
+
 
 ## Installation
 
