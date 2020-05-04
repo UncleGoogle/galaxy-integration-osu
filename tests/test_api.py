@@ -1,5 +1,4 @@
 from unittest.mock import Mock
-import json
 import pytest
 
 from api import ApiClient

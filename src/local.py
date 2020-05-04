@@ -1,23 +1,24 @@
 import sys
-import platform
+WIN = sys.platform == 'win32'
+MAC = sys.platform == 'darwin'
+
+import logging
 import pathlib
 import asyncio
-from typing import Optional
+import typing as t
+if WIN:
+    import winreg
 
 import psutil
 
-WIN = MAC = False
-if sys.platform == 'win32':
-    import winreg
-    WIN = True
-elif sys.platform == 'darwin':
-    MAC = True
+
+logger = logging.getLogger(__name__)
 
 
 class LocalClient():
     def __init__(self):
-        self._exe: Optional[pathlib.Path] = self._find_exe()
-        self._proc: Optional[psutil.Process] = None
+        self._exe: t.Optional[pathlib.Path] = self._find_exe()
+        self._proc: t.Optional[psutil.Process] = None
 
     @property
     def is_installed(self) -> bool:
@@ -35,7 +36,7 @@ class LocalClient():
             return False
         return True
 
-    def _find_exe(self) -> Optional[str]:
+    def _find_exe(self) -> t.Optional[str]:
         if not WIN:
             raise NotImplementedError('Only Windows supported for now')
 
@@ -47,10 +48,13 @@ class LocalClient():
         except FileNotFoundError:
             return None
 
-    def install(self):
-        pass # TODO download exe and launch
+    async def install(self, installer_path) -> int:
+        process = await asyncio.subprocess.create_subprocess_exec(str(installer_path))  # pylint: disable=no-member
+        returncode = await process.wait()
+        self._find_exe()
+        return returncode
 
     async def launch(self) -> asyncio.subprocess.Process:  # pylint: disable=no-member # due to pylint/issues/1469
-        process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  #pylint: disable=no-member
+        process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  # pylint: disable=no-member
         self._proc = psutil.Process(process.pid)
         return process
