@@ -13,7 +13,7 @@ sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
 import aiofiles
 from galaxy.api.plugin import Plugin, create_and_run_plugin
-from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement
+from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement, UserInfo
 from galaxy.api.consts import Platform, LocalGameState, OSCompatibility
 
 from local import LocalClient
@@ -77,6 +77,15 @@ class PluginOsu(Plugin):
             )
             for medal in me.get('user_achievements', [])
         ]
+
+    async def get_friends(self):
+        # presence: f['is_online']
+        return [
+            UserInfo(str(f['id']), f['username'], f.get('avatar_url'), 'https://osu.ppy.sh/users/' + str(f['id']))
+            for f in await self._api.get_friends()
+            if not f['is_bot']
+        ]
+
 
     # local game management
 
