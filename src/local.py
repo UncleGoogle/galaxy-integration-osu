@@ -40,9 +40,12 @@ class LocalClient():
         if not WIN:
             raise NotImplementedError('Only Windows supported for now')
 
-        UNINSTALL_KEY = R'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{86ce7517-ee79-4be9-a314-128183321391}'
+        UNINSTALL_REG = R'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
         try:
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, UNINSTALL_KEY) as key:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, R'Software\osu!') as key:
+                uninstall_id = winreg.QueryValueEx(key, 'UninstallId')[0]
+                uninstall_key = UNINSTALL_REG + fR'\{{{uninstall_id}}}'
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, uninstall_key) as key:
                 exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
                 return pathlib.Path(exe)
         except FileNotFoundError:
