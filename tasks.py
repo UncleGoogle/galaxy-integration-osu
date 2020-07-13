@@ -169,7 +169,7 @@ def release(c, automa=False):
     else:
         print('No draft release with given tag found.')
         if not automa:
-            pass#create_tag(c, tag)
+            create_tag(c, tag)
 
         print(f'Creating new release for tag `{tag}`')
         draft_release = repo.create_git_release(
