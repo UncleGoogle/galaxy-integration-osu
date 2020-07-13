@@ -100,6 +100,8 @@ def dist(c, output=DIST_PLUGIN, deps=False):
                 proc.terminate()
                 break
     if not deps:
+        print('Build without dependencies')
+        os.makedirs(output, exist_ok=True)
         copy(c, output)
     else:
         build(c, output)
@@ -107,8 +109,8 @@ def dist(c, output=DIST_PLUGIN, deps=False):
 
 
 @task
-def copy(c, output=DIST_PLUGIN, galaxy_path=GALAXY_PATH):
-    print('copying source code ...')
+def copy(c, output=DIST_PLUGIN):
+    print(f'Copying source code to {output}')
     for file_ in glob("src/*.py"):
         shutil.copy(file_, output)
     shutil.copy('CHANGELOG.md', output)
@@ -167,7 +169,7 @@ def release(c, automa=False):
     else:
         print('No draft release with given tag found.')
         if not automa:
-            create_tag(c, tag)
+            pass#create_tag(c, tag)
 
         print(f'Creating new release for tag `{tag}`')
         draft_release = repo.create_git_release(

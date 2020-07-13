@@ -15,7 +15,7 @@ _Requires `python3.6` or higher_
 1. `git clone https://github.com/UncleGoogle/galaxy-integration-osu.git`
 2. `cd galaxy-integration-osu`
 3. `pip install -r requirements/dev.txt`
-4. `inv dist`  # this will forcelly restart Galaxy
+4. `inv dist --deps`  # this will forcelly restart Galaxy
 
 
 ## Features:
