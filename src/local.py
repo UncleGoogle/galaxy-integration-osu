@@ -36,20 +36,31 @@ class LocalClient():
             return False
         return True
 
-    def _find_exe(self) -> t.Optional[str]:
+    def _find_exe(self) -> t.Optional[pathlib.Path]:
         if not WIN:
             raise NotImplementedError('Only Windows supported for now')
 
         UNINSTALL_REG = R'SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+        stable_uninstall_id = self._find_osu_stable_uninstall_id()
+        lazer_uninstall_id = "osulazer"
+        
+        for uninstall_id in [lazer_uninstall_id, stable_uninstall_id]:
+            try:
+                uninstall_key = UNINSTALL_REG + fR'\{{{uninstall_id}}}'
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, uninstall_key) as key:
+                    exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
+                    return pathlib.Path(exe)
+            except FileNotFoundError:
+                continue
+        else:
+            return None
+    
+    def _find_osu_stable_uninstall_id(self) -> str:
         try:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, R'Software\osu!') as key:
-                uninstall_id = winreg.QueryValueEx(key, 'UninstallId')[0]
-                uninstall_key = UNINSTALL_REG + fR'\{{{uninstall_id}}}'
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, uninstall_key) as key:
-                exe = winreg.QueryValueEx(key, 'DisplayIcon')[0]
-                return pathlib.Path(exe)
+                return winreg.QueryValueEx(key, 'UninstallId')[0]
         except FileNotFoundError:
-            return None
+            return ""
 
     async def install(self, installer_path) -> int:
         process = await asyncio.subprocess.create_subprocess_exec(str(installer_path))  # pylint: disable=no-member
