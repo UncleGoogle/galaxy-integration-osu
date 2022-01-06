@@ -16,13 +16,16 @@ from galaxy.api.plugin import Plugin, create_and_run_plugin
 from galaxy.api.types import Authentication, NextStep, Game, LicenseInfo, LicenseType, LocalGame, Achievement, UserInfo, UserPresence, GameTime
 from galaxy.api.consts import Platform, LocalGameState, OSCompatibility, PresenceState
 
-from local import LocalClient
+from local import LocalClient, get_uninstall_id_lazer, get_uninstall_id_stable
 from api import ApiClient, OAuthClient
 
 
 OSU = 'osu!'
+OSU_LAZER = 'osu!(lazer)'
+OSU_GAME_IDS = [OSU, OSU_LAZER]
 
 logger = logging.getLogger()
+
 
 with open(pathlib.Path(__file__).parent / 'manifest.json') as f:
     manifest = json.load(f)
@@ -32,12 +35,20 @@ class PluginOsu(Plugin):
     def __init__(self, reader, writer, token):
         super().__init__(Platform(manifest['platform']), manifest['version'], reader, writer, token)
         self._api = ApiClient(self.store_credentials, self.lost_authentication)
-        self._local = LocalClient()
+        self._local_clients = {
+            OSU: LocalClient(get_uninstall_id_stable),
+            OSU_LAZER: LocalClient(get_uninstall_id_lazer)
+        }
 
     # const game info
 
     async def get_owned_games(self) -> List[Game]:
-        return [Game(OSU, OSU, None, LicenseInfo(LicenseType.OtherUserLicense))]
+        # skip showing Lazer in Galaxy if it is not installed as there is no support for OSU_LAZER installation yet
+        owned_ids = [OSU, OSU_LAZER] if self._local_clients[OSU_LAZER].is_installed else [OSU]
+        return [
+            Game(id_, id_, None, LicenseInfo(LicenseType.OtherUserLicense))
+            for id_ in owned_ids
+        ]
 
     async def get_os_compatibility(self, game_id, context):
         return OSCompatibility.Windows  # | OSCompatibility.MacOS  # support for windows for now
@@ -103,13 +114,16 @@ class PluginOsu(Plugin):
 
     # local game management
 
-    async def get_local_games(self) -> List[LocalGame]:
+    def _get_local_game(self, game_id: str) -> LocalGame:
         state = LocalGameState.None_
-        if self._local.is_installed:
+        if self._local_clients[game_id].is_installed:
             state |= LocalGameState.Installed
-        if self._local.is_running:
+        if self._local_clients[game_id].is_running:
             state |= LocalGameState.Running
-        return [LocalGame(OSU, state)]
+        return LocalGame(game_id, state)
+
+    async def get_local_games(self) -> List[LocalGame]:
+        return [self._get_local_game(id_) for id_ in OSU_GAME_IDS]
 
     async def install_game(self, game_id):
         install_link = 'https://m1.ppy.sh/r/osu!install.exe'
@@ -121,15 +135,15 @@ class PluginOsu(Plugin):
             logger.error(repr(e))
             webbrowser.open('https://osu.ppy.sh/home/download')
         else:
-            await self._local.install(installer_path)
-            if self._local.is_installed:
+            await self._local_clients[game_id].install(installer_path)
+            if self._local_clients[game_id].is_installed:
                 self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))
 
     async def launch_game(self, game_id):
-        process = await self._local.launch()
-        self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed | LocalGameState.Running))
+        process = await self._local_clients[game_id].launch()
+        self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed | LocalGameState.Running))
         await process.wait()
-        self.update_local_game_status(LocalGame(OSU, LocalGameState.Installed))
+        self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
 
 
 def main():
