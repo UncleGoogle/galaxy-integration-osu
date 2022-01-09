@@ -55,7 +55,6 @@ class PluginOsu(Plugin):
     # authentication
 
     async def authenticate(self, stored_credentials=None) -> Union[Authentication, NextStep]:
-        return Authentication('mock', 'mock')
         if stored_credentials is not None:
             return await self._auth(stored_credentials)
 
