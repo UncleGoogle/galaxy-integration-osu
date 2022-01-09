@@ -1,6 +1,10 @@
+## Unreleased
+[Added]
+- support for osu!lazer as a separate game instance #9
+
 ## Version 1.0.1
 [Fix]
-- Installed game detection #3
+- installed game detection #3
 
 ## Version 1.0.0
 [Added]
