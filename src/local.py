@@ -27,14 +27,14 @@ class InstallClient(metaclass=abc.ABCMeta):
         self._proc: t.Optional[psutil.Process] = None
         self._exe: t.Optional[pathlib.Path] = None
         #self.check_installed_state()
-    
+
     def check_installed_state(self):
         self._exe: t.Optional[pathlib.Path] = self._find_exe()
-    
+
     @property
     def is_installed(self) -> bool:
         return self._exe is not None and self._exe.exists()
-    
+
     @property
     def is_running(self):
         if self._proc is None:
@@ -46,7 +46,7 @@ class InstallClient(metaclass=abc.ABCMeta):
             self._proc.wait()
             return False
         return True
-    
+
     async def launch(self) -> asyncio.subprocess.Process:  # pylint: disable=no-member # due to pylint/issues/1469
         process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  # pylint: disable=no-member
         self._proc = psutil.Process(process.pid)
@@ -56,14 +56,14 @@ class InstallClient(metaclass=abc.ABCMeta):
     def _find_exe(self) -> t.Optional[pathlib.Path]:
         pass
 
-    
+
 class WinInstallClient(InstallClient, metaclass=abc.ABCMeta):
     EXE_NAME = "osu!.exe"
 
     def _find_exe(self) -> t.Optional[pathlib.Path]:
         UNINSTALL_REG = R"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
         LOOKUP_REGISTRY_HIVES = [winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE]
-        
+
         for hive in LOOKUP_REGISTRY_HIVES:
             try:
                 uninstall_key_adr = UNINSTALL_REG + os.sep + self._get_uninstall_id()

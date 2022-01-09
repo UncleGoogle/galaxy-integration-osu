@@ -137,7 +137,7 @@ class PluginOsu(Plugin):
         self._local_clients[game_id].check_installed_state()
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
-        
+
     async def _install_with_webinstaller(self, url: str, fallback: Callable):
         installer_path = pathlib.PurePath(tempfile.gettempdir()) / url.split('/')[-1]
         try:
