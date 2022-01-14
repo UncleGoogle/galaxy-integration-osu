@@ -51,6 +51,10 @@ class InstallClient(metaclass=abc.ABCMeta):
         process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  # pylint: disable=no-member
         self._proc = psutil.Process(process.pid)
         return process
+    
+    @abc.abstractmethod
+    async def uninstall(self):
+        pass
 
     @abc.abstractmethod
     def _find_exe(self) -> t.Optional[pathlib.Path]:
@@ -74,6 +78,10 @@ class WinInstallClient(InstallClient, metaclass=abc.ABCMeta):
             except FileNotFoundError as e:
                 print(repr(e))
                 logger.debug(e)
+    
+    async def uninstall(self):
+        os.system('cmd /c appwiz.cpl')
+        await asyncio.sleep(45)
 
     @abc.abstractmethod
     def _get_uninstall_id(self):

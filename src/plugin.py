@@ -131,13 +131,18 @@ class PluginOsu(Plugin):
                 webbrowser.open('https://osu.ppy.sh/home/download')
 
         if game_id == OSU_LAZER:
-            # No small-size webinstaller. Let user install it manually
+            # No small size installer. Let user handle by hand.
             webbrowser.open('https://github.com/ppy/osu/releases/latest/download/install.exe')
             webbrowser.open('https://github.com/ppy/osu/releases')
 
         self._local_clients[game_id].check_installed_state()
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
+    
+    async def uninstall_game(self, game_id: str) -> None:
+        await self._local_clients[game_id].uninstall()
+        if not self._local_clients[game_id].is_installed:
+            self.update_local_game_status(LocalGame(game_id, LocalGameState.None_))
 
     async def _install_with_webinstaller(self, url: str):
         async with aiofiles.tempfile.NamedTemporaryFile('wb+') as installer_bin:
