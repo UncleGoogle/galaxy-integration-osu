@@ -1,3 +1,3 @@
-galaxy.plugin.api==0.65
-psutil==5.6.6
-aiofiles==0.5.0
+galaxy.plugin.api==0.69
+psutil==5.9.0
+aiofiles==0.8.0
