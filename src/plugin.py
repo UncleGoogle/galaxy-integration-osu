@@ -4,11 +4,9 @@ import json
 import webbrowser
 import logging
 import pathlib
-import tempfile
 from datetime import datetime
 from urllib import parse
-from typing import Callable, List, Union, Dict
-from functools import partial
+from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
@@ -126,11 +124,14 @@ class PluginOsu(Plugin):
 
     async def install_game(self, game_id):
         if game_id == OSU:
-            self._install_with_webinstaller(
-               url='https://m1.ppy.sh/r/osu!install.exe',
-               fallback=partial(webbrowser.open, 'https://osu.ppy.sh/home/download')
-            )
+            try:
+                await self._install_with_webinstaller('https://m1.ppy.sh/r/osu!install.exe')
+            except Exception as e:
+                logger.error(repr(e))
+                webbrowser.open('https://osu.ppy.sh/home/download')
+
         if game_id == OSU_LAZER:
+            # No small-size webinstaller. Let user install it manually
             webbrowser.open('https://github.com/ppy/osu/releases/latest/download/install.exe')
             webbrowser.open('https://github.com/ppy/osu/releases')
 
@@ -138,16 +139,10 @@ class PluginOsu(Plugin):
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
 
-    async def _install_with_webinstaller(self, url: str, fallback: Callable):
-        installer_path = pathlib.PurePath(tempfile.gettempdir()) / url.split('/')[-1]
-        try:
-            async with aiofiles.open(installer_path, mode="wb") as installer_bin:
-                await installer_bin.write(await self._api.get_file(url))
-        except Exception as e:
-            logger.error(repr(e))
-            fallback()
-        else:
-            await run(installer_path)
+    async def _install_with_webinstaller(self, url: str):
+        async with aiofiles.tempfile.NamedTemporaryFile('wb+') as installer_bin:
+            await installer_bin.write(await self._api.get_file(url))
+            await run(installer_bin.name)
 
     async def launch_game(self, game_id):
         process = await self._local_clients[game_id].launch()
