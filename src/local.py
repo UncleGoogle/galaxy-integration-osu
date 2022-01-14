@@ -26,7 +26,7 @@ class InstallClient(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
         self._proc: t.Optional[psutil.Process] = None
         self._exe: t.Optional[pathlib.Path] = None
-        #self.check_installed_state()
+        self.check_installed_state()
 
     def check_installed_state(self):
         self._exe: t.Optional[pathlib.Path] = self._find_exe()
