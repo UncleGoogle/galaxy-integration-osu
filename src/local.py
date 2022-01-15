@@ -15,6 +15,7 @@ import psutil
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 async def run(installer_path: t.Union[str, pathlib.PurePath]) -> int:
@@ -71,12 +72,10 @@ class WinInstallClient(InstallClient, metaclass=abc.ABCMeta):
         for hive in LOOKUP_REGISTRY_HIVES:
             try:
                 uninstall_key_adr = UNINSTALL_REG + os.sep + self._get_uninstall_id()
-                print(uninstall_key_adr)
                 with winreg.OpenKey(hive, uninstall_key_adr) as uk:
                     icon_path = winreg.QueryValueEx(uk, 'DisplayIcon')[0]
                     return pathlib.Path(icon_path).parent / self.EXE_NAME
             except FileNotFoundError as e:
-                print(repr(e))
                 logger.debug(e)
     
     async def uninstall(self):
