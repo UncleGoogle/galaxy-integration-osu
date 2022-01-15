@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 import json
@@ -127,7 +128,7 @@ class PluginOsu(Plugin):
             try:
                 await self._install_with_webinstaller('https://m1.ppy.sh/r/osu!install.exe')
             except Exception as e:
-                logger.error(repr(e))
+                logger.exception(e)
                 webbrowser.open('https://osu.ppy.sh/home/download')
 
         if game_id == OSU_LAZER:
@@ -139,15 +140,16 @@ class PluginOsu(Plugin):
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
     
+    async def _install_with_webinstaller(self, url: str):
+        async with aiofiles.tempfile.NamedTemporaryFile('wb+', delete=False) as installer_bin:
+            await installer_bin.write(await self._api.get_file(url))
+        await run(installer_bin.name)
+        os.unlink(installer_bin)
+
     async def uninstall_game(self, game_id: str) -> None:
         await self._local_clients[game_id].uninstall()
         if not self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.None_))
-
-    async def _install_with_webinstaller(self, url: str):
-        async with aiofiles.tempfile.NamedTemporaryFile('wb+') as installer_bin:
-            await installer_bin.write(await self._api.get_file(url))
-            await run(installer_bin.name)
 
     async def launch_game(self, game_id):
         process = await self._local_clients[game_id].launch()
