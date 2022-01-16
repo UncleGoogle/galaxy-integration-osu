@@ -1,20 +1,15 @@
-import pytest
-
-
 from galaxy.api.types import Achievement
 
 
 OSU = 'osu!'
 
 
-@pytest.mark.asyncio
 async def test_achievements_no_achievements(api_mock, plugin):
     api_mock.get_me.return_value = {}
     context = await plugin.prepare_achievements_context([OSU])
     await plugin.get_unlocked_achievements(OSU, context) == []
 
 
-@pytest.mark.asyncio
 async def test_achievements(api_mock, plugin):
     api_mock.get_me.return_value = {
         "user_achievements": [

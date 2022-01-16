@@ -26,7 +26,6 @@ def local_mock():
 @pytest.fixture
 async def plugin(api_mock, mocker):
     mocker.patch('plugin.ApiClient', return_value=api_mock)
-    mocker.patch('plugin.LocalClient', return_value=local_mock)
     plugin = PluginOsu(Mock(), Mock(), "handshake_token")
     plugin.push_cache = Mock(spec=())
     plugin.handshake_complete()
