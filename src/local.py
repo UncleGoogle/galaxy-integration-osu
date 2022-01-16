@@ -37,7 +37,7 @@ class InstallClient(metaclass=abc.ABCMeta):
         return self._exe is not None and self._exe.exists()
 
     @property
-    def is_rtlnning(self):
+    def is_running(self):
         if self._proc is None:
             return False
         if not self._proc.is_running():

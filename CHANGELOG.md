@@ -1,3 +1,7 @@
+## Version 1.1.1
+[Fix]
+- running state detection typo introduced in 1.1.0
+
 ## Version 1.1.0
 [Added]
 - support for osu!lazer as a separate game instance #9
