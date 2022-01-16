@@ -17,8 +17,10 @@ with open('src/manifest.json') as f:
     __version__ = json.load(f)['version']
 
 
-REQUIREMENTS = 'requirements/app.txt'
-REQUIREMENTS_DEV = 'requirements/dev.txt'
+REQUIREMENTS = 'requirements/app.in'
+REQUIREMENTS_DEV = 'requirements/dev.in'
+REQUIREMENTS_LOCK = 'requirements/lock/app.txt'
+REQUIREMENTS_DEV_LOCK = 'requirements/lock/dev.txt'
 
 GALAXY_PATH = ''
 DIST_DIR = ''
@@ -53,8 +55,15 @@ def asset_name(tag, platform):
 
 @task
 def install(c, dev=False):
-    req = REQUIREMENTS_DEV if dev else REQUIREMENTS
+    req = REQUIREMENTS_DEV_LOCK if dev else REQUIREMENTS_LOCK
     c.run(f"{PYTHON} -m pip install -r {req}")
+
+
+@task
+def lock(c, dev=False):
+    req_in = REQUIREMENTS_DEV if dev else REQUIREMENTS
+    req_out = REQUIREMENTS_DEV_LOCK if dev else REQUIREMENTS_LOCK
+    c.run(f"pip-compile --generate-hashes --output-file={req_out} {req_in}")
 
 
 @task
@@ -80,7 +89,7 @@ def build(c, output=DIST_PLUGIN):
 
     args = [
         PYTHON, "-m", "pip", "install",
-        "-r", REQUIREMENTS,
+        "-r", REQUIREMENTS_LOCK,
         "--target", str(output / THIRD_PARTY_RELATIVE_DEST),
         # "--implementation", "cp",
         # "--python-version", "37",
