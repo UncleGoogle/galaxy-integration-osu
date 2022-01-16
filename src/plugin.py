@@ -127,7 +127,7 @@ class PluginOsu(Plugin):
     async def install_game(self, game_id):
         if game_id == OSU:
             try:
-                await self._install_with_webinstaller_via_tmpfile('https://m1.ppy.sh/r/osu!install.exe')
+                await self._install_with_webinstaller('https://m1.ppy.sh/r/osu!install.exe')
             except Exception as e:
                 logger.exception(e)
                 webbrowser.open('https://osu.ppy.sh/home/download')
@@ -141,7 +141,7 @@ class PluginOsu(Plugin):
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
     
-    async def _install_with_webinstaller_via_tmpfile(self, url: str):
+    async def _install_with_webinstaller(self, url: str):
         try:
             async with aiofiles.tempfile.NamedTemporaryFile('wb+', delete=False) as installer_bin:
                 await installer_bin.write(await self._api.get_file(url))
