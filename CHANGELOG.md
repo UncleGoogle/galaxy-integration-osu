@@ -1,4 +1,4 @@
-## Unreleased
+## Version 1.1.0
 [Added]
 - support for osu!lazer as a separate game instance #9
 - simple uninstall functionality (which just opens Windows "Uninstall program" panel)
