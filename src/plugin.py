@@ -147,7 +147,7 @@ class PluginOsu(Plugin):
                 await installer_bin.write(await self._api.get_file(url))
             await run(installer_bin.name)
         finally:
-            with suppress(AttributeError, FileNotFoundError):
+            with suppress(NameError, AttributeError, FileNotFoundError):
                 os.remove(installer_bin.name)
 
     async def uninstall_game(self, game_id: str) -> None:
