@@ -37,7 +37,7 @@ class InstallClient(metaclass=abc.ABCMeta):
         return self._exe is not None and self._exe.exists()
 
     @property
-    def is_running(self):
+    def is_rtlnning(self):
         if self._proc is None:
             return False
         if not self._proc.is_running():
@@ -80,7 +80,7 @@ class WinInstallClient(InstallClient, metaclass=abc.ABCMeta):
     
     async def uninstall(self):
         os.system('cmd /c appwiz.cpl')
-        await asyncio.sleep(45)
+        await asyncio.sleep(30)
 
     @abc.abstractmethod
     def _get_uninstall_id(self):
