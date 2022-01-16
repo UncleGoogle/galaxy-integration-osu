@@ -1,4 +1,3 @@
-from contextlib import suppress
 import os
 import sys
 import re
@@ -6,6 +5,7 @@ import json
 import webbrowser
 import logging
 import pathlib
+from contextlib import suppress
 from datetime import datetime
 from urllib import parse
 from typing import List, Union, Dict
