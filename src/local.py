@@ -15,6 +15,7 @@ import psutil
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 async def run(installer_path: t.Union[str, pathlib.PurePath]) -> int:
@@ -26,7 +27,7 @@ class InstallClient(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
         self._proc: t.Optional[psutil.Process] = None
         self._exe: t.Optional[pathlib.Path] = None
-        #self.check_installed_state()
+        self.check_installed_state()
 
     def check_installed_state(self):
         self._exe: t.Optional[pathlib.Path] = self._find_exe()
@@ -36,7 +37,7 @@ class InstallClient(metaclass=abc.ABCMeta):
         return self._exe is not None and self._exe.exists()
 
     @property
-    def is_running(self):
+    def is_rtlnning(self):
         if self._proc is None:
             return False
         if not self._proc.is_running():
@@ -51,6 +52,10 @@ class InstallClient(metaclass=abc.ABCMeta):
         process = await asyncio.subprocess.create_subprocess_exec(str(self._exe))  # pylint: disable=no-member
         self._proc = psutil.Process(process.pid)
         return process
+    
+    @abc.abstractmethod
+    async def uninstall(self):
+        pass
 
     @abc.abstractmethod
     def _find_exe(self) -> t.Optional[pathlib.Path]:
@@ -67,13 +72,15 @@ class WinInstallClient(InstallClient, metaclass=abc.ABCMeta):
         for hive in LOOKUP_REGISTRY_HIVES:
             try:
                 uninstall_key_adr = UNINSTALL_REG + os.sep + self._get_uninstall_id()
-                print(uninstall_key_adr)
                 with winreg.OpenKey(hive, uninstall_key_adr) as uk:
                     icon_path = winreg.QueryValueEx(uk, 'DisplayIcon')[0]
                     return pathlib.Path(icon_path).parent / self.EXE_NAME
             except FileNotFoundError as e:
-                print(repr(e))
                 logger.debug(e)
+    
+    async def uninstall(self):
+        os.system('cmd /c appwiz.cpl')
+        await asyncio.sleep(30)
 
     @abc.abstractmethod
     def _get_uninstall_id(self):

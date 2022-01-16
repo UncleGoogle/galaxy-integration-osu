@@ -1,14 +1,14 @@
+import os
 import sys
 import re
 import json
 import webbrowser
 import logging
 import pathlib
-import tempfile
+from contextlib import suppress
 from datetime import datetime
 from urllib import parse
-from typing import Callable, List, Union, Dict
-from functools import partial
+from typing import List, Union, Dict
 
 sys.path.insert(0, str(pathlib.PurePath(__file__).parent / 'modules'))
 
@@ -126,28 +126,34 @@ class PluginOsu(Plugin):
 
     async def install_game(self, game_id):
         if game_id == OSU:
-            self._install_with_webinstaller(
-               url='https://m1.ppy.sh/r/osu!install.exe',
-               fallback=partial(webbrowser.open, 'https://osu.ppy.sh/home/download')
-            )
+            try:
+                await self._install_with_webinstaller('https://m1.ppy.sh/r/osu!install.exe')
+            except Exception as e:
+                logger.exception(e)
+                webbrowser.open('https://osu.ppy.sh/home/download')
+
         if game_id == OSU_LAZER:
+            # No small size installer. Let user handle by hand.
             webbrowser.open('https://github.com/ppy/osu/releases/latest/download/install.exe')
             webbrowser.open('https://github.com/ppy/osu/releases')
 
         self._local_clients[game_id].check_installed_state()
         if self._local_clients[game_id].is_installed:
             self.update_local_game_status(LocalGame(game_id, LocalGameState.Installed))
-
-    async def _install_with_webinstaller(self, url: str, fallback: Callable):
-        installer_path = pathlib.PurePath(tempfile.gettempdir()) / url.split('/')[-1]
+    
+    async def _install_with_webinstaller(self, url: str):
         try:
-            async with aiofiles.open(installer_path, mode="wb") as installer_bin:
+            async with aiofiles.tempfile.NamedTemporaryFile('wb+', delete=False) as installer_bin:
                 await installer_bin.write(await self._api.get_file(url))
-        except Exception as e:
-            logger.error(repr(e))
-            fallback()
-        else:
-            await run(installer_path)
+            await run(installer_bin.name)
+        finally:
+            with suppress(AttributeError, FileNotFoundError):
+                os.remove(installer_bin.name)
+
+    async def uninstall_game(self, game_id: str) -> None:
+        await self._local_clients[game_id].uninstall()
+        if not self._local_clients[game_id].is_installed:
+            self.update_local_game_status(LocalGame(game_id, LocalGameState.None_))
 
     async def launch_game(self, game_id):
         process = await self._local_clients[game_id].launch()
